@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}User Profile{% endblock %}
+
+{% block content %}
+<div class="profile">
+    <h2>{{ user.username }}'s Profile</h2>
+    
+    <div class="profile-card">
+        <div class="profile-picture">
+            {% if user.profile_picture %}
+                <img src="{{ url_for('static', filename='uploads/' + user.profile_picture) }}" alt="Profile picture">
+            {% else %}
+                <div class="profile-placeholder">{{ user.username[0].upper() }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="profile-details">
+            <div class="detail-item">
+                <span class="label">Username:</span>
+                <span class="value">{{ user.username }}</span>
+            </div>
+            
+            <div class="detail-item">
+                <span class="label">Wallet Address:</span>
+                <span class="value">{{ user.wallet_address }}</span>
+                <button class="btn small" onclick="copyToClipboard('{{ user.wallet_address }}')">Copy</button>
+            </div>
+            
+            <div class="detail-item">
+                <span class="label">Balance:</span>
+                <span class="value">{{ user.balance }} SOL</span>
+            </div>
+            
+            <div class="detail-item">
+                <span class="label">Member Since:</span>
+                <span class="value">{{ user.created_at }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="user-actions">
+        {% if session.user_id == user.id %}
+            <h3>Account Actions</h3>
+            <a href="{{ url_for('transfer') }}" class="btn secondary">Transfer Tokens</a>
+        {% else %}
+            <h3>User Actions</h3>
+            <form method="POST" action="{{ url_for('transfer') }}">
+                <input type="hidden" name="recipient" value="{{ user.wallet_address }}">
+                <div class="form-group inline">
+                    <label for="amount">Send tokens:</label>
+                    <input type="text" id="amount" name="amount" placeholder="Amount" class="small-input">
+                    <button type="submit" class="btn secondary">Send</button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('Address copied to clipboard!');
+    }, function() {
+        alert('Failed to copy address');
+    });
+}
+</script>
+{% endblock %}

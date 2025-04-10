@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Welcome to Solana Vulnerable Bank</h1>
+    <p>A demonstration of common web2 security vulnerabilities in a web3 context</p>
+    
+    {% if 'user_id' not in session %}
+    <div class="cta-buttons">
+        <a href="{{ url_for('auth.login') }}" class="btn primary">Login</a>
+        <a href="{{ url_for('auth.register') }}" class="btn secondary">Register</a>
+    </div>
+    {% else %}
+    <div class="cta-buttons">
+        <a href="{{ url_for('dashboard') }}" class="btn primary">Go to Dashboard</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="features">
+    <div class="feature-item">
+        <h2>Secure Transfers</h2>
+        <p>Send tokens to other users quickly and easily</p>
+    </div>
+    
+    <div class="feature-item">
+        <h2>Wallet Integration</h2>
+        <p>Each account comes with a Solana wallet address</p>
+    </div>
+    
+    <div class="feature-item">
+        <h2>Transaction History</h2>
+        <p>View your complete transaction history</p>
+    </div>
+</div>
+
+<div class="warning">
+    <h3>Educational Purposes Only</h3>
+    <p>This application contains intentional security vulnerabilities for educational purposes.</p>
+    <p>Do not use real credentials or connect real wallets!</p>
+</div>
+{% endblock %}

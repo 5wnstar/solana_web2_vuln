@@ -1,0 +1,437 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Vulnerable Solana Wallet API",
+      "description": "A deliberately vulnerable API for educational purposes demonstrating web2 security issues in web3 applications",
+      "version": "1.0.0"
+    },
+    "servers": [
+      {
+        "url": "http://localhost:5000",
+        "description": "Development server"
+      }
+    ],
+    "paths": {
+      "/api/wallet/{wallet_id}": {
+        "get": {
+          "summary": "Get wallet details",
+          "description": "Retrieves details for a specific wallet by ID. Vulnerable to BOLA as there's no authorization check.",
+          "parameters": [
+            {
+              "name": "wallet_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              },
+              "description": "The ID of the wallet to retrieve"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful operation",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Wallet"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Wallet not found"
+            }
+          }
+        }
+      },
+      "/api/transactions/{user_id}": {
+        "get": {
+          "summary": "Get user transactions",
+          "description": "Retrieves transaction history for a specific user. Vulnerable to BOLA as there's no authorization check.",
+          "parameters": [
+            {
+              "name": "user_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              },
+              "description": "The ID of the user whose transactions to retrieve"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful operation",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Transaction"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/login": {
+        "post": {
+          "summary": "Login to account",
+          "description": "Authenticate a user. Vulnerable to SQL injection and has weak JWT implementation.",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/x-www-form-urlencoded": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string",
+                      "description": "User's username"
+                    },
+                    "password": {
+                      "type": "string",
+                      "description": "User's password"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "302": {
+              "description": "Redirect to dashboard"
+            }
+          }
+        }
+      },
+      "/transfer": {
+        "post": {
+          "summary": "Transfer tokens",
+          "description": "Transfer Solana tokens to another user. Vulnerable to negative amount transfers and has no transaction limits.",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/x-www-form-urlencoded": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recipient_address": {
+                      "type": "string",
+                      "description": "Recipient's Solana address"
+                    },
+                    "amount": {
+                      "type": "number",
+                      "description": "Amount to transfer"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Description of the transfer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "302": {
+              "description": "Redirect to dashboard"
+            }
+          }
+        }
+      },
+      "/profile": {
+        "post": {
+          "summary": "Update profile",
+          "description": "Update user profile information. Vulnerable to unrestricted file upload.",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string",
+                      "description": "User's display name"
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "User's email address"
+                    },
+                    "profile_picture": {
+                      "type": "string",
+                      "format": "binary",
+                      "description": "User's profile picture. No file type validation."
+                    },
+                    "bio": {
+                      "type": "string",
+                      "description": "User's biography. Vulnerable to XSS."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "302": {
+              "description": "Redirect to profile page"
+            }
+          }
+        },
+        "get": {
+          "summary": "Get user profile",
+          "description": "Retrieves the user's profile. No CSRF protection.",
+          "responses": {
+            "200": {
+              "description": "User profile",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/users": {
+        "get": {
+          "summary": "Get all users",
+          "description": "Admin endpoint to retrieve all users. Vulnerable to privilege escalation as it only checks for admin role in the JWT without verifying signature.",
+          "parameters": [
+            {
+              "name": "api_key",
+              "in": "query",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "API key for admin access. Hard-coded in the backend."
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of all users",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/recover-seed": {
+        "post": {
+          "summary": "Recover wallet seed phrase",
+          "description": "Endpoint to recover a wallet's seed phrase. Vulnerable to rate limiting bypass and does not require proper authentication.",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "wallet_id": {
+                      "type": "integer",
+                      "description": "ID of the wallet"
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "Email associated with the account"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Seed phrase recovery initiated",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/export-keys/{wallet_id}": {
+        "get": {
+          "summary": "Export private keys",
+          "description": "Exports private keys for a wallet. Vulnerable to insecure direct object reference.",
+          "parameters": [
+            {
+              "name": "wallet_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              },
+              "description": "The ID of the wallet"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Private keys exported",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "private_key": {
+                        "type": "string"
+                      },
+                      "seed_phrase": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "Wallet": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "description": "Wallet ID"
+            },
+            "address": {
+              "type": "string",
+              "description": "Solana public address"
+            },
+            "balance": {
+              "type": "number",
+              "description": "Current balance in SOL"
+            },
+            "owner_id": {
+              "type": "integer",
+              "description": "User ID of the wallet owner"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Creation timestamp"
+            },
+            "is_primary": {
+              "type": "boolean",
+              "description": "Whether this is the user's primary wallet"
+            },
+            "private_key_encrypted": {
+              "type": "string",
+              "description": "Weakly encrypted private key using a predictable encryption key"
+            }
+          }
+        },
+        "Transaction": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "description": "Transaction ID"
+            },
+            "from_address": {
+              "type": "string",
+              "description": "Sender's Solana address"
+            },
+            "to_address": {
+              "type": "string",
+              "description": "Recipient's Solana address"
+            },
+            "amount": {
+              "type": "number",
+              "description": "Amount transferred in SOL"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Transaction timestamp"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["pending", "confirmed", "failed"],
+              "description": "Transaction status"
+            },
+            "description": {
+              "type": "string",
+              "description": "User-provided transaction description. Not sanitized for XSS."
+            },
+            "transaction_signature": {
+              "type": "string",
+              "description": "Solana transaction signature"
+            }
+          }
+        },
+        "User": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "description": "User ID"
+            },
+            "username": {
+              "type": "string",
+              "description": "Username"
+            },
+            "email": {
+              "type": "string",
+              "description": "Email address"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Account creation timestamp"
+            },
+            "wallets": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Wallet"
+              },
+              "description": "User's wallets"
+            },
+            "profile_picture_url": {
+              "type": "string",
+              "description": "URL to the user's profile picture"
+            },
+            "role": {
+              "type": "string",
+              "enum": ["user", "admin"],
+              "description": "User role"
+            },
+            "password_hash": {
+              "type": "string",
+              "description": "Weak hash of user's password using MD5"
+            },
+            "recovery_email": {
+              "type": "string",
+              "description": "Backup email for account recovery"
+            }
+          }
+        }
+      }
+    }
+  }

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Transfer Tokens{% endblock %}
+
+{% block content %}
+<div class="transfer-form">
+    <h2>Transfer Tokens</h2>
+    
+    <form method="POST" action="{{ url_for('transfer') }}">
+        <div class="form-group">
+            <label for="recipient">Recipient Wallet Address</label>
+            <input type="text" id="recipient" name="recipient" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="amount">Amount (SOL)</label>
+            <input type="text" id="amount" name="amount" required>
+
+        </div>
+        
+        <div class="form-note">
+            <p>Current Balance: {{ balance }} SOL</p>
+        </div>
+        
+        <button type="submit" class="btn primary">Transfer</button>
+    </form>
+    <div class="transfer-tips">
+        <h3>Transfer Tips</h3>
+        <ul>
+            <li>Enter the full wallet address of the recipient</li>
+            <li>Double-check the amount before sending</li>
+            <li>Try different amounts to see what happens!</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Community Comments{% endblock %}
+
+{% block content %}
+<div class="comments-section">
+    <h2>Community Comments</h2>
+    
+    <div class="comment-form">
+        <h3>Add a Comment</h3>
+        <form method="POST" action="{{ url_for('comments') }}">
+            <div class="form-group">
+                <textarea id="comment" name="comment" rows="4" placeholder="Share your thoughts..."></textarea>
+            </div>
+            <button type="submit" class="btn primary">Post Comment</button>
+        </form>
+    </div>
+    
+    <div class="comments-list">
+        <h3>Recent Comments</h3>
+        
+        {% if comments %}
+            {% for comment in comments %}
+                <div class="comment-card">
+                    <div class="comment-header">
+                        <span class="username">{{ comment.username }}</span>
+                        <span class="timestamp">{{ comment.timestamp }}</span>
+                    </div>
+                    <div class="comment-body">
+                        <!-- XSS vulnerability: Directly inserting unsanitized user input -->
+                        {{ comment.comment_text|safe }}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No comments yet. Be the first to comment!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h2>Welcome, {{ session.username }}!</h2>
+    
+    <div class="wallet-info">
+        <div class="balance-card">
+            <h3>Your Balance</h3>
+            <div class="balance">{{ balance }} SOL</div>
+        </div>
+        
+        <div class="wallet-address">
+            <h3>Wallet Address</h3>
+            <div class="address">{{ session.wallet_address }}</div>
+            <button class="btn small" onclick="copyToClipboard('{{ session.wallet_address }}')">Copy</button>
+        </div>
+    </div>
+    
+    <div class="quick-actions">
+        <a href="{{ url_for('transfer') }}" class="action-card">
+            <h3>Transfer Tokens</h3>
+            <p>Send tokens to another user</p>
+        </a>
+        
+        <a href="{{ url_for('transactions') }}" class="action-card">
+            <h3>Transaction History</h3>
+            <p>View your recent transactions</p>
+        </a>
+        
+        <a href="{{ url_for('profile', user_id=session.user_id) }}" class="action-card">
+            <h3>Your Profile</h3>
+            <p>View and edit your profile</p>
+        </a>
+    </div>
+    <div class="profile-upload">
+        <h3>Update Profile Picture</h3>
+        <form action="{{ url_for('upload_profile_pic') }}" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="file" name="profile_pic" id="profile_pic">
+                <button type="submit" class="btn secondary">Upload</button>
+            </div>
+            <!-- Vulnerable: No file type validation on frontend -->
+        </form>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('Address copied to clipboard!');
+    }, function() {
+        alert('Failed to copy address');
+    });
+}
+</script>
+{% endblock %}

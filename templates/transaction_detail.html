@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Transaction Details{% endblock %}
+
+{% block content %}
+<div class="transaction-detail">
+    <h2>Transaction Details</h2>
+    
+    <div class="detail-card">
+        <div class="detail-item">
+            <span class="label">Transaction ID:</span>
+            <span class="value">{{ transaction.id }}</span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="label">Date & Time:</span>
+            <span class="value">{{ transaction.timestamp }}</span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="label">Sender ID:</span>
+            <span class="value">{{ transaction.sender_id }}</span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="label">Recipient ID:</span>
+            <span class="value">{{ transaction.recipient_id }}</span>
+        </div>
+        
+        <div class="detail-item">
+            <span class="label">Amount:</span>
+            <span class="value">{{ transaction.amount }} SOL</span>
+        </div>
+    </div>
+    
+    <div class="transaction-actions">
+        <a href="{{ url_for('transactions') }}" class="btn secondary">Back to Transactions</a>
+    </div>
+</div>
+{% endblock %}

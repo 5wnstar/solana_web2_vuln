@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana Wallet - {% block title %}Home{% endblock %}</title>
+    
+    <!-- Google Fonts: Nunito and Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Main CSS - Using absolute URL to prevent path issues -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <!-- For debugging: Show directly what's being rendered -->
+    <style>
+        /* Fallback minimal styles in case the main CSS doesn't load */
+        body { font-family: sans-serif; line-height: 1.6; margin: 0; padding: 20px; }
+        .container { width: 90%; max-width: 1200px; margin: 0 auto; }
+        header { padding: 1rem 0; border-bottom: 1px solid #ddd; margin-bottom: 2rem; }
+        header .container { display: flex; justify-content: space-between; align-items: center; }
+        nav ul { display: flex; list-style: none; }
+        nav ul li { margin-left: 1.5rem; }
+        .alert { padding: 1rem; margin-bottom: 1rem; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .danger { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #ddd; text-align: center; }
+    </style>
+    
+    <!-- Vulnerable: Inline JavaScript that will execute with localStorage token -->
+    <script>
+        // Vulnerable: Get token from localStorage for automatic authentication
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                // Set token in request header
+                document.getElementById('auth-token').value = token;
+            }
+        }
+        
+        // Debug function to check if CSS is loading
+        function checkCssLoaded() {
+            const allCss = document.styleSheets;
+            console.log("Total stylesheets:", allCss.length);
+            for (let i = 0; i < allCss.length; i++) {
+                try {
+                    console.log(`Stylesheet ${i}:`, allCss[i].href);
+                } catch (e) {
+                    console.log(`Stylesheet ${i}: Error accessing information`);
+                }
+            }
+        }
+        
+        window.onload = function() {
+            checkAuth();
+            checkCssLoaded();
+        }
+    </script>
+</head>
+<body>
+    <input type="hidden" id="auth-token" name="auth-token" value="">
+    
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Solana Vulnerable Wallet</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    {% if 'user_id' in session %}
+                        <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                        <li><a href="{{ url_for('transfer') }}">Transfer</a></li>
+                        <li><a href="{{ url_for('transactions') }}">Transactions</a></li>
+                        <li><a href="{{ url_for('comments') }}">Comments</a></li>
+                        <li><a href="{{ url_for('profile', user_id=session.user_id) }}">Profile</a></li>
+                        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                        <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <main class="container">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Solana Vulnerable Bank - For Educational Purposes Only</p>
+            <p><a href="{{ url_for('api_docs') }}">API Documentation</a></p>
+        </div>
+    </footer>
+    
+    <script>
+        // Vulnerable: Store JWT token in localStorage
+        {% if session.token %}
+            localStorage.setItem('token', '{{ session.token }}');
+        {% endif %}
+    </script>
+</body>
+</html>

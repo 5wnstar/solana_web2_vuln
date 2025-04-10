@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}API Documentation{% endblock %}
+
+{% block content %}
+<div class="api-docs">
+    <h2>API Documentation</h2>
+    
+    <div class="api-section">
+        <h3>Authentication</h3>
+        <div class="api-endpoint">
+            <h4>Validate Token</h4>
+            <div class="endpoint-details">
+                <p><strong>URL:</strong> /auth/api/validate-token</p>
+                <p><strong>Method:</strong> POST</p>
+                <p><strong>Body:</strong> {"token": "your-jwt-token"}</p>
+                <p><strong>Response:</strong> {"valid": true|false, "user_id": 123}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="api-section">
+        <h3>User Endpoints</h3>
+        <div class="api-endpoint">
+            <h4>Get User Profile</h4>
+            <div class="endpoint-details">
+                <p><strong>URL:</strong> /auth/api/user/:user_id</p>
+                <p><strong>Method:</strong> GET</p>
+                <p><strong>Response:</strong> User object</p>
+            </div>
+        </div>
+        
+        <div class="api-endpoint">
+            <h4>Get User Balance</h4>
+            <div class="endpoint-details">
+                <p><strong>URL:</strong> /api/balance/:user_id</p>
+                <p><strong>Method:</strong> GET</p>
+                <p><strong>Response:</strong> {"user_id": 123, "balance": 500.0}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Insecure: Exposes admin endpoints -->
+    <div class="api-section admin-section">
+        <h3>Admin Endpoints</h3>
+        <div class="api-endpoint">
+            <h4>Admin Dashboard</h4>
+            <div class="endpoint-details">
+                <p><strong>URL:</strong> /admin/dashboard</p>
+                <p><strong>Method:</strong> GET</p>
+                <p><strong>Note:</strong> Requires admin privileges</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="security-note">
+        <h3>Security Note</h3>
+        <p>These API endpoints are intentionally vulnerable for educational purposes.</p>
+        <p>In a real application, proper authentication and authorization would be required.</p>
+    </div>
+</div>
+{% endblock %}

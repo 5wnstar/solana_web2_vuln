@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Transaction History{% endblock %}
+
+{% block content %}
+<div class="transactions">
+    <h2>Transaction History</h2>
+    
+    {% if transactions %}
+        <table class="transaction-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Date</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in transactions %}
+                <tr>
+                    <td>{{ tx.id }}</td>
+                    <td>{{ tx.timestamp }}</td>
+                    <td>{{ tx.sender_username }}</td>
+                    <td>{{ tx.recipient_username }}</td>
+                    <td>{{ tx.amount }} SOL</td>
+                    <td>
+            
+                        <a href="{{ url_for('view_transaction', tx_id=tx.id) }}" class="btn small">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-state">
+            <p>No transactions found</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
