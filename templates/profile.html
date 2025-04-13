@@ -1,67 +1,181 @@
 {% extends "base.html" %}
-{% block title %}User Profile{% endblock %}
+{% block title %}Profile{% endblock %}
 
 {% block content %}
-<div class="profile">
-    <h2>{{ user.username }}'s Profile</h2>
-    
-    <div class="profile-card">
-        <div class="profile-picture">
-            {% if user.profile_picture %}
-                <img src="{{ url_for('static', filename='uploads/' + user.profile_picture) }}" alt="Profile picture">
-            {% else %}
-                <div class="profile-placeholder">{{ user.username[0].upper() }}</div>
-            {% endif %}
+<div class="profile-container">
+    <div class="profile-header">
+        <h2>{{ user.username }}'s Profile</h2>
+        {% if user.profile_picture %}
+            <img src="{{ url_for('static', filename='uploads/' + user.profile_picture) }}" alt="Profile Picture" class="profile-picture">
+        {% endif %}
+    </div>
+
+    <div class="profile-details">
+        <div class="detail-item">
+            <strong>Wallet Address:</strong>
+            <span class="wallet-address">{{ user.wallet_address }}</span>
         </div>
         
-        <div class="profile-details">
-            <div class="detail-item">
-                <span class="label">Username:</span>
-                <span class="value">{{ user.username }}</span>
-            </div>
-            
-            <div class="detail-item">
-                <span class="label">Wallet Address:</span>
-                <span class="value">{{ user.wallet_address }}</span>
-                <button class="btn small" onclick="copyToClipboard('{{ user.wallet_address }}')">Copy</button>
-            </div>
-            
-            <div class="detail-item">
-                <span class="label">Balance:</span>
-                <span class="value">{{ user.balance }} SOL</span>
-            </div>
-            
-            <div class="detail-item">
-                <span class="label">Member Since:</span>
-                <span class="value">{{ user.created_at }}</span>
+        <div class="detail-item">
+            <strong>Balance:</strong>
+            <span class="balance">{{ user.balance }} SOL</span>
+        </div>
+        
+        <div class="detail-item">
+            <strong>Seed Phrase:</strong>
+            <div class="seed-phrase-container">
+                <span class="seed-phrase">{{ user.seed_phrase }}</span>
+                <button onclick="copySeedPhrase()" class="copy-button">Copy</button>
             </div>
         </div>
     </div>
-    <div class="user-actions">
-        {% if session.user_id == user.id %}
-            <h3>Account Actions</h3>
-            <a href="{{ url_for('transfer') }}" class="btn secondary">Transfer Tokens</a>
-        {% else %}
-            <h3>User Actions</h3>
-            <form method="POST" action="{{ url_for('transfer') }}">
-                <input type="hidden" name="recipient" value="{{ user.wallet_address }}">
-                <div class="form-group inline">
-                    <label for="amount">Send tokens:</label>
-                    <input type="text" id="amount" name="amount" placeholder="Amount" class="small-input">
-                    <button type="submit" class="btn secondary">Send</button>
-                </div>
-            </form>
-        {% endif %}
+
+    <div class="transfer-section">
+        <h3>Transfer Tokens</h3>
+        <form id="transfer-form" onsubmit="return transferTokens(event)">
+            <div class="form-group">
+                <label for="recipient">Recipient Wallet Address:</label>
+                <input type="text" id="recipient" name="recipient" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="amount">Amount (SOL):</label>
+                <input type="number" id="amount" name="amount" step="0.000000001" min="0.000000001" max="{{ user.balance }}" required>
+            </div>
+            
+            <button type="submit" class="transfer-button">Transfer</button>
+        </form>
     </div>
 </div>
 
+<style>
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.profile-picture {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    margin-top: 20px;
+}
+
+.profile-details {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.detail-item {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: white;
+    border-radius: 4px;
+}
+
+.wallet-address, .seed-phrase {
+    font-family: monospace;
+    word-break: break-all;
+}
+
+.seed-phrase-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.copy-button {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.copy-button:hover {
+    background-color: #0056b3;
+}
+
+.transfer-section {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.transfer-button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.transfer-button:hover {
+    background-color: #218838;
+}
+</style>
+
 <script>
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(function() {
-        alert('Address copied to clipboard!');
-    }, function() {
-        alert('Failed to copy address');
+function copySeedPhrase() {
+    const seedPhrase = document.querySelector('.seed-phrase').textContent;
+    navigator.clipboard.writeText(seedPhrase).then(() => {
+        alert('Seed phrase copied to clipboard!');
     });
+}
+
+function transferTokens(event) {
+    event.preventDefault();
+    
+    const recipient = document.getElementById('recipient').value;
+    const amount = document.getElementById('amount').value;
+    
+    fetch('/transfer', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `recipient=${encodeURIComponent(recipient)}&amount=${encodeURIComponent(amount)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Transfer successful!');
+            window.location.reload();
+        } else {
+            alert('Transfer failed: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error.message);
+    });
+    
+    return false;
 }
 </script>
 {% endblock %}
