@@ -193,6 +193,12 @@ def test_static():
     </html>
     """
 
+# URL fetcher page
+@app.route('/url-fetcher')
+@login_required
+def url_fetcher():
+    return render_template('url_fetcher.html')
+
 # Run the app
 if __name__ == '__main__':
     app.run(debug=True)  # Vulnerability: Debug mode should not be on in production

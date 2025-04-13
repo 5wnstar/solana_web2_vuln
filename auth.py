@@ -1,28 +1,13 @@
 from flask import Blueprint, request, render_template, redirect, url_for, session, flash, jsonify
-import jwt
-import datetime
 import hashlib
 import os
 import random
 import string
+import requests
 from database import get_user_by_username, register_user, query_db
+from jwt_utils import generate_token, verify_token, token_required
 
 auth_bp = Blueprint('auth', __name__)
-
-# Weak secret key
-JWT_SECRET = "solana_vulnerable_app_secret"
-
-# Weak token generation function
-def generate_token(user_id, username):
-    payload = {
-        'user_id': user_id,
-        'username': username,
-        # Vulnerability: No token expiration
-        # 'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
-    }
-    # Vulnerability: Weak algorithm, no signature verification enforced
-    token = jwt.encode(payload, JWT_SECRET, algorithm='HS256')
-    return token
 
 # Vulnerable login route - SQL Injection possible
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -39,7 +24,7 @@ def login():
             session['username'] = user['username']
             session['wallet_address'] = user['wallet_address']
             
-            # Generate JWT token with limited security
+            # Generate JWT token with multiple vulnerabilities
             token = generate_token(user['id'], user['username'])
             session['token'] = token
             
@@ -85,14 +70,15 @@ def validate_token():
     
     try:
         # Vulnerability: No signature verification enforced
-        payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+        payload = verify_token(token)
         return jsonify({'valid': True, 'user_id': payload.get('user_id')})
     except:
         return jsonify({'valid': False})
 
 # Gets user profile - Vulnerable to BOLA
 @auth_bp.route('/api/user/<int:user_id>', methods=['GET'])
-def get_user(user_id):
+@token_required
+def get_user(current_user, user_id):
     # Vulnerability: No authorization check to see if the current user has permission to access this profile
     user = query_db("SELECT id, username, wallet_address, balance, profile_picture FROM users WHERE id = ?", 
                     [user_id], one=True)
@@ -107,3 +93,35 @@ def get_user(user_id):
         })
     else:
         return jsonify({'error': 'User not found'}), 404
+
+# Vulnerable URL fetcher - SSRF vulnerability
+@auth_bp.route('/api/fetch-url', methods=['POST'])
+@token_required
+def fetch_url(current_user):
+    url = request.json.get('url')
+    
+    if not url:
+        return jsonify({'error': 'URL is required'}), 400
+        
+    try:
+        # Vulnerability: No URL validation or whitelist
+        # Vulnerability: Follows redirects
+        # Vulnerability: No timeout
+        response = requests.get(
+            url,
+            allow_redirects=True,
+            verify=False  # Vulnerability: Disabled SSL verification
+        )
+        
+        # Vulnerability: Returns raw response content
+        return jsonify({
+            'status_code': response.status_code,
+            'content': response.text,
+            'headers': dict(response.headers)
+        })
+    except Exception as e:
+        # Vulnerability: Detailed error messages
+        return jsonify({
+            'error': 'Failed to fetch URL',
+            'details': str(e)
+        }), 500

@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}URL Fetcher{% endblock %}
+
+{% block content %}
+<div class="url-fetcher">
+    <h2>URL Fetcher</h2>
+    <p class="description">Enter a URL to fetch its content. This feature is for testing purposes only.</p>
+    
+    <div class="url-form">
+        <input type="text" id="url-input" placeholder="Enter URL to fetch" class="url-input">
+        <button onclick="fetchUrl()" class="fetch-button">Fetch URL</button>
+    </div>
+    
+    <div id="result" class="result-container" style="display: none;">
+        <h3>Response</h3>
+        <div class="response-details">
+            <div class="status-code"></div>
+            <div class="headers"></div>
+            <div class="content"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.url-fetcher {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.description {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.url-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.url-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.fetch-button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.fetch-button:hover {
+    background-color: #0056b3;
+}
+
+.result-container {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.response-details {
+    margin-top: 15px;
+}
+
+.status-code, .headers, .content {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: white;
+    border-radius: 4px;
+}
+
+.headers {
+    font-family: monospace;
+    white-space: pre-wrap;
+}
+
+.content {
+    max-height: 400px;
+    overflow-y: auto;
+}
+</style>
+
+<script>
+function fetchUrl() {
+    const url = document.getElementById('url-input').value;
+    if (!url) {
+        alert('Please enter a URL');
+        return;
+    }
+    
+    fetch('/auth/api/fetch-url', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ url: url })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const resultDiv = document.getElementById('result');
+        resultDiv.style.display = 'block';
+        
+        if (data.error) {
+            resultDiv.innerHTML = `
+                <h3>Error</h3>
+                <div class="error-message">${data.error}</div>
+                ${data.details ? `<div class="error-details">${data.details}</div>` : ''}
+            `;
+            return;
+        }
+        
+        resultDiv.innerHTML = `
+            <h3>Response</h3>
+            <div class="response-details">
+                <div class="status-code">
+                    <strong>Status Code:</strong> ${data.status_code}
+                </div>
+                <div class="headers">
+                    <strong>Headers:</strong><br>
+                    <pre>${JSON.stringify(data.headers, null, 2)}</pre>
+                </div>
+                <div class="content">
+                    <strong>Content:</strong><br>
+                    <pre>${data.content}</pre>
+                </div>
+            </div>
+        `;
+    })
+    .catch(error => {
+        const resultDiv = document.getElementById('result');
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `
+            <h3>Error</h3>
+            <div class="error-message">Failed to fetch URL</div>
+            <div class="error-details">${error.message}</div>
+        `;
+    });
+}
+</script>
+{% endblock %} 
