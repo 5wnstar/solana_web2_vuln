@@ -2,7 +2,8 @@ from flask import Flask, render_template, session, redirect, url_for, request, f
 import os
 from werkzeug.utils import secure_filename
 from auth import auth_bp
-from database import init_db, close_db, get_user_by_id, get_balance
+from admin import admin_bp
+from database import init_db, close_db, get_user_by_id, get_balance, is_admin
 from database import transfer_tokens, get_transaction_history, get_transaction_by_id
 from database import save_profile_picture, add_comment, get_comments
 import json
@@ -17,8 +18,9 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# Register auth blueprint
+# Register blueprints
 app.register_blueprint(auth_bp, url_prefix='/auth')
+app.register_blueprint(admin_bp, url_prefix='/admin')
 
 # Close database connection on teardown
 app.teardown_appcontext(close_db)
@@ -40,6 +42,11 @@ def login_required(view):
     wrapped_view.__name__ = view.__name__
     return wrapped_view
 
+# Add admin check to template context
+@app.context_processor
+def inject_admin_status():
+    return dict(is_admin=lambda: 'user_id' in session and is_admin(session['user_id']))
+
 # Home page
 @app.route('/')
 def index():
@@ -53,7 +60,7 @@ def dashboard():
     balance = get_balance(user_id)
     return render_template('dashboard.html', balance=balance)
 
-# Profile page - Vulnerable to BOLA
+# Profile page - Vulnerable to BOLA and unauthorized access
 @app.route('/profile/<int:user_id>')
 def profile(user_id):
     # Vulnerability: No authorization check - any user can view any profile
@@ -65,38 +72,31 @@ def profile(user_id):
         
     return render_template('profile.html', user=user)
 
-# Transfer tokens page
+# Transfer tokens page - Vulnerable to unauthorized transfers
 @app.route('/transfer', methods=['GET', 'POST'])
 @login_required
 def transfer():
     if request.method == 'POST':
+        # Vulnerability: No CSRF protection
         sender_id = session.get('user_id')
         recipient_address = request.form.get('recipient')
-        
-        # Vulnerability: No input validation for amount
-        # Could allow negative amounts or non-numeric input
         amount = float(request.form.get('amount', 0))
         
+        # Vulnerability: No proper validation of sender's identity
         success, message = transfer_tokens(sender_id, recipient_address, amount)
         
         if success:
             flash(message, 'success')
+            return jsonify({'success': True, 'message': message})
         else:
             flash(message, 'danger')
+            return jsonify({'success': False, 'message': message})
             
-        return redirect(url_for('dashboard'))
-     # Get the user's balance
+    # Get the user's balance
     user_id = session.get('user_id')
-    balance = get_balance(user_id)  # Call the function here
+    balance = get_balance(user_id)
         
     return render_template('transfer.html', balance=balance)
-"""def get_balance(user_id):
-    # Query the database or blockchain to get the user's balance
-    # For example:
-    user = User.query.get(user_id)
-    if user:
-        return user.balance  # Assuming User model has a balance field
-    return 0.0  # Return 0 if user not found """
 
 # Transaction history page
 @app.route('/transactions')

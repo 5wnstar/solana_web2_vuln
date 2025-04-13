@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-container">
+    <h2>User Management</h2>
+    
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Wallet Address</th>
+                    <th>Balance</th>
+                    <th>Status</th>
+                    <th>Admin</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td class="wallet-address">{{ user.wallet_address }}</td>
+                    <td>{{ "%.2f"|format(user.balance) }}</td>
+                    <td>
+                        <span class="status-badge {% if user.is_active %}status-active{% else %}status-inactive{% endif %}">
+                            {{ 'Active' if user.is_active else 'Inactive' }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge {% if user.is_admin %}status-active{% else %}status-inactive{% endif %}">
+                            {{ 'Yes' if user.is_admin else 'No' }}
+                        </span>
+                    </td>
+                    <td class="action-buttons">
+                        <form action="{{ url_for('admin.toggle_user', user_id=user.id) }}" method="POST" class="inline-form">
+                            <button type="submit" class="btn btn-small {% if user.is_active %}btn-danger{% else %}btn-success{% endif %}">
+                                {{ 'Deactivate' if user.is_active else 'Activate' }}
+                            </button>
+                        </form>
+                        <form action="{{ url_for('admin.update_balance', user_id=user.id) }}" method="POST" class="inline-form">
+                            <input type="number" name="balance" value="{{ user.balance }}" step="0.01" class="small-input">
+                            <button type="submit" class="btn btn-small">Update Balance</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %} 

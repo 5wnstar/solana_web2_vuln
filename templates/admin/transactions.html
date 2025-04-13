@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-container">
+    <h2>Transaction Management</h2>
+    
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Sender</th>
+                    <th>Recipient</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Timestamp</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in transactions %}
+                <tr>
+                    <td>{{ tx.id }}</td>
+                    <td>{{ tx.sender_username }} ({{ tx.sender_wallet }})</td>
+                    <td>{{ tx.recipient_username }} ({{ tx.recipient_wallet }})</td>
+                    <td>{{ "%.2f"|format(tx.amount) }}</td>
+                    <td>
+                        <span class="status-badge {% if tx.status == 'completed' %}status-active{% else %}status-pending{% endif %}">
+                            {{ tx.status|title }}
+                        </span>
+                    </td>
+                    <td>{{ tx.timestamp }}</td>
+                    <td class="action-buttons">
+                        {% if tx.status == 'completed' %}
+                        <form action="{{ url_for('admin.reverse_tx', tx_id=tx.id) }}" method="POST" class="inline-form">
+                            <button type="submit" class="btn btn-small btn-danger">Reverse</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %} 

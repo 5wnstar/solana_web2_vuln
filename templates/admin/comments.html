@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-container">
+    <h2>Comment Management</h2>
+    
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Content</th>
+                    <th>Status</th>
+                    <th>Timestamp</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for comment in comments %}
+                <tr>
+                    <td>{{ comment.id }}</td>
+                    <td>{{ comment.username }}</td>
+                    <td>{{ comment.content }}</td>
+                    <td>
+                        <span class="status-badge {% if comment.status == 'approved' %}status-active{% elif comment.status == 'pending' %}status-pending{% else %}status-inactive{% endif %}">
+                            {{ comment.status|title }}
+                        </span>
+                    </td>
+                    <td>{{ comment.timestamp }}</td>
+                    <td class="action-buttons">
+                        <form action="{{ url_for('admin.moderate_comment_action', comment_id=comment.id) }}" method="POST" class="inline-form">
+                            <select name="status" class="status-select">
+                                <option value="approved" {% if comment.status == 'approved' %}selected{% endif %}>Approve</option>
+                                <option value="pending" {% if comment.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="rejected" {% if comment.status == 'rejected' %}selected{% endif %}>Reject</option>
+                            </select>
+                            <button type="submit" class="btn btn-small">Update</button>
+                        </form>
+                        <form action="{{ url_for('admin.delete_comment_route', comment_id=comment.id) }}" method="POST" class="inline-form">
+                            <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %} 

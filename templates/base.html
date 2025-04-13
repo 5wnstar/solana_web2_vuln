@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solana Wallet - {% block title %}Home{% endblock %}</title>
     
-    <!-- Google Fonts: Nunito and Montserrat -->
+    <!-- Google Fonts and Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
-    <!-- Main CSS - Using absolute URL to prevent path issues -->
+    <!-- Main CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     
     <!-- For debugging: Show directly what's being rendered -->
@@ -60,48 +61,92 @@
     </script>
 </head>
 <body>
-    <input type="hidden" id="auth-token" name="auth-token" value="">
-    
-    <header>
-        <div class="container">
+    <div class="layout-container">
+        <!-- Left Sidebar Navigation -->
+        <nav class="sidebar">
             <div class="logo">
-                <h1>Solana Vulnerable Wallet</h1>
+                <span class="material-icons">security</span>
+                <h1>Solana Vuln Bank</h1>
             </div>
-            <nav>
-                <ul>
-                    <li><a href="{{ url_for('index') }}">Home</a></li>
-                    {% if 'user_id' in session %}
-                        <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                        <li><a href="{{ url_for('transfer') }}">Transfer</a></li>
-                        <li><a href="{{ url_for('transactions') }}">Transactions</a></li>
-                        <li><a href="{{ url_for('comments') }}">Comments</a></li>
-                        <li><a href="{{ url_for('profile', user_id=session.user_id) }}">Profile</a></li>
-                        <li><a href="{{ url_for('url_fetcher') }}">URL Fetcher</a></li>
-                        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-                    {% else %}
-                        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-                        <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+            <ul class="nav-links">
+                <li>
+                    <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">
+                        <span class="material-icons">home</span>
+                        <span>Home</span>
+                    </a>
+                </li>
+                {% if 'user_id' in session %}
+                    <li>
+                        <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">
+                            <span class="material-icons">dashboard</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('transfer') }}" class="{% if request.endpoint == 'transfer' %}active{% endif %}">
+                            <span class="material-icons">swap_horiz</span>
+                            <span>Transfer</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('transactions') }}" class="{% if request.endpoint == 'transactions' %}active{% endif %}">
+                            <span class="material-icons">receipt_long</span>
+                            <span>Transactions</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('comments') }}" class="{% if request.endpoint == 'comments' %}active{% endif %}">
+                            <span class="material-icons">comment</span>
+                            <span>Comments</span>
+                        </a>
+                    </li>
+                    {% if is_admin() %}
+                        <li>
+                            <a href="{{ url_for('admin.admin_dashboard') }}" class="{% if request.endpoint.startswith('admin.') %}active{% endif %}">
+                                <span class="material-icons">admin_panel_settings</span>
+                                <span>Admin Panel</span>
+                            </a>
+                        </li>
                     {% endif %}
-                </ul>
-            </nav>
-        </div>
-    </header>
-    
-    <main class="container">
-        <!-- Flash messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert {{ category }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        {% block content %}{% endblock %}
-    </main>
-    
+                    <li>
+                        <a href="{{ url_for('auth.logout') }}">
+                            <span class="material-icons">logout</span>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li>
+                        <a href="{{ url_for('auth.login') }}" class="{% if request.endpoint == 'auth.login' %}active{% endif %}">
+                            <span class="material-icons">login</span>
+                            <span>Login</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('auth.register') }}" class="{% if request.endpoint == 'auth.register' %}active{% endif %}">
+                            <span class="material-icons">person_add</span>
+                            <span>Register</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
     <footer>
         <div class="container">
             <p>&copy; 2025 Solana Vulnerable Bank - For Educational Purposes Only</p>

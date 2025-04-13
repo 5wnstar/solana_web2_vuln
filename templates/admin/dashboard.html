@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <h2>Admin Dashboard</h2>
+    
+    <div class="dashboard-grid">
+        <!-- User Management Card -->
+        <div class="dashboard-card">
+            <h3>User Management</h3>
+            <div class="card-content">
+                <p>Total Users: {{ users|length }}</p>
+                <a href="{{ url_for('admin.user_management') }}" class="btn">Manage Users</a>
+            </div>
+        </div>
+
+        <!-- Transaction Monitoring Card -->
+        <div class="dashboard-card">
+            <h3>Transaction Monitoring</h3>
+            <div class="card-content">
+                <p>Recent Transactions: {{ transactions|length }}</p>
+                <a href="{{ url_for('admin.transaction_management') }}" class="btn">View Transactions</a>
+            </div>
+        </div>
+
+        <!-- Comments Moderation Card -->
+        <div class="dashboard-card">
+            <h3>Comments Moderation</h3>
+            <div class="card-content">
+                <a href="{{ url_for('admin.comment_moderation') }}" class="btn">Moderate Comments</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="recent-activity">
+        <h3>Recent Activity</h3>
+        <div class="activity-list">
+            {% for log in access_logs[:5] %}
+            <div class="activity-item">
+                <span class="timestamp">{{ log.timestamp }}</span>
+                <span class="username">{{ log.username or 'Anonymous' }}</span>
+                <span class="action">{{ log.action }}</span>
+                <span class="ip">{{ log.ip_address }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %} 
