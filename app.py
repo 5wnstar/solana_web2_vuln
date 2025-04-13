@@ -161,8 +161,6 @@ def comments():
         
     all_comments = get_comments()
     return render_template('comments.html', comments=all_comments)
-
-# API docs page - Might contain sensitive information
 @app.route('/api-docs')
 def api_docs():
     # Vulnerability: Exposes API endpoints and methods without requiring authentication
@@ -201,4 +199,4 @@ def url_fetcher():
 
 # Run the app
 if __name__ == '__main__':
-    app.run(debug=True)  # Vulnerability: Debug mode should not be on in production
+    app.run(debug=True) 

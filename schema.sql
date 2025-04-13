@@ -29,10 +29,4 @@ CREATE TABLE comments (
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
-
--- Insert some sample users
-INSERT INTO users (username, password, wallet_address, balance) VALUES 
-    ('alice', 'password123', '5UAQj9qLqHuWk3UyjPkJ9HEHjS4goLXjdTMgUJp1MwXE', 500.0),
-    ('bob', 'bobpass', 'Gg4ffDQXQRNRQj9VQQmGX9rAzA5goDegj2krXEQqbPRA', 300.0),
-    ('admin', 'admin123', 'HuZ9V7zBkZ39hALiPhpkQrwbMPiqWgh7aKkNwr6HyUQv', 1000.0);
     
