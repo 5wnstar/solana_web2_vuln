@@ -158,9 +158,10 @@ def comments():
         # Vulnerability: No sanitization of user input
         add_comment(user_id, comment_text)
         flash('Comment added', 'success')
-        
+
     all_comments = get_comments()
     return render_template('comments.html', comments=all_comments)
+
 @app.route('/api-docs')
 def api_docs():
     # Vulnerability: Exposes API endpoints and methods without requiring authentication
