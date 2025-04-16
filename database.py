@@ -142,26 +142,45 @@ def get_balance(user_id):
 
 # Vulnerable transfer implementation (no proper validation, allowing negative transfers)
 def transfer_tokens(sender_id, recipient_address, amount):
-    # No amount validation or recipient validation!
+    # Get sender's current balance
     sender = get_user_by_id(sender_id)
-    
-    # Get recipient by wallet address - vulnerable to timing attacks
+    if not sender:
+        return False, "Insufficient funds"
+        
+    # Get recipient by wallet address
     recipient = query_db("SELECT * FROM users WHERE wallet_address = ?", [recipient_address], one=True)
-    
     if not recipient:
         return False, "Recipient not found"
+    
+    # Check if sender and recipient are the same
+    if sender_id == recipient['id']:
+        return False, "Cannot transfer to yourself"
+    
+    # Check balance only for positive transfers
+    if amount > 0 and amount > sender['balance']:
+        return False, "Insufficient funds"
+    
+    # Perform the transfer
+    try:
+        # For negative amounts, we need to add the absolute value to sender and subtract from recipient
+        if amount < 0:
+            query_db("UPDATE users SET balance = balance + ? WHERE id = ?", [abs(amount), sender_id])
+            query_db("UPDATE users SET balance = balance - ? WHERE id = ?", [abs(amount), recipient['id']])
+        else:
+            # For positive amounts, normal transfer
+            query_db("UPDATE users SET balance = balance - ? WHERE id = ?", [amount, sender_id])
+            query_db("UPDATE users SET balance = balance + ? WHERE id = ?", [amount, recipient['id']])
         
-    # Vulnerable: No balance check or amount validation
-    query_db("UPDATE users SET balance = balance - ? WHERE id = ?", [amount, sender_id])
-    query_db("UPDATE users SET balance = balance + ? WHERE id = ?", [amount, recipient['id']])
-    
-    # Record the transaction
-    query_db(
-        "INSERT INTO transactions (sender_id, recipient_id, amount, timestamp) VALUES (?, ?, ?, datetime('now'))",
-        [sender_id, recipient['id'], amount]
-    )
-    
-    return True, "Transfer completed"
+        # Record the transaction
+        query_db(
+            "INSERT INTO transactions (sender_id, recipient_id, amount, timestamp) VALUES (?, ?, ?, datetime('now'))",
+            [sender_id, recipient['id'], amount]
+        )
+        
+        return True, "Transfer completed successfully"
+    except Exception as e:
+        print(f"Transfer error: {str(e)}")  # Add error logging
+        return False, "Insufficient funds"
 
 # Get user's transaction history
 def get_transaction_history(user_id):
