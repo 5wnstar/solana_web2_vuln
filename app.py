@@ -7,6 +7,7 @@ from database import init_db, close_db, get_user_by_id, get_balance, is_admin
 from database import transfer_tokens, get_transaction_history, get_transaction_by_id
 from database import save_profile_picture, add_comment, get_comments
 import json
+import requests
 
 app = Flask(__name__, 
             static_folder='static',  # Explicitly set static folder
@@ -133,9 +134,17 @@ def upload_profile_pic():
         flash('No selected file', 'warning')
         return redirect(url_for('dashboard'))
         
-    # Vulnerability: Insufficient file validation
+    # Basic extension check but no magic number validation
+    allowed_extensions = {'png', 'jpg', 'jpeg'}
+    file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+    
+    if file_ext not in allowed_extensions:
+        flash('Only PNG, JPG, and JPEG files are allowed', 'danger')
+        return redirect(url_for('dashboard'))
+        
     if file:
-        # Vulnerability: secure_filename doesn't fully protect against path traversal
+        # Vulnerability: Only checks extension, not file content/magic numbers
+        # An attacker could modify a malicious file's header to match image magic numbers
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
@@ -197,6 +206,40 @@ def test_static():
 @login_required
 def url_fetcher():
     return render_template('url_fetcher.html')
+
+@app.route('/auth/api/fetch-internal', methods=['GET', 'POST'])
+def fetch_internal():
+    # Get URL from query params for GET or form data for POST
+    url = request.args.get('url') if request.method == 'GET' else request.form.get('url')
+    if not url:
+        return jsonify({'error': 'No URL provided'}), 400
+    
+    try:
+        # Get the session cookie from the current request
+        session_cookie = request.cookies.get('session')
+        
+        # Prepare headers with the session cookie
+        headers = {
+            'Cookie': f'session={session_cookie}'
+        }
+        
+        # Make the request with the session cookie
+        response = requests.get(url, 
+                              verify=False, 
+                              timeout=5,
+                              headers=headers,
+                              cookies={'session': session_cookie})
+        
+        return jsonify({
+            'status_code': response.status_code,
+            'headers': dict(response.headers),
+            'content': response.text
+        })
+    except Exception as e:
+        return jsonify({
+            'error': 'Failed to fetch URL',
+            'details': str(e)
+        }), 500
 
 # Run the app
 if __name__ == '__main__':

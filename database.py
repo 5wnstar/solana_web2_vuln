@@ -4,7 +4,7 @@ import random
 import string
 from flask import g
 
-DATABASE = 'vuln_bank.db'
+DATABASE = 'vuln_sol.db'
 
 def get_db():
     db = getattr(g, '_database', None)

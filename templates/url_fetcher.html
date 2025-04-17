@@ -1,149 +1,316 @@
 {% extends "base.html" %}
-{% block title %}URL Fetcher{% endblock %}
+{% block title %}Transaction Analyzer{% endblock %}
 
 {% block content %}
-<div class="url-fetcher">
-    <h2>URL Fetcher</h2>
-    <p class="description">Enter a URL to fetch its content. This feature is for testing purposes only.</p>
+<div class="data-explorer">
+    <div class="explorer-header">
+        <h2>Transaction Analyzer</h2>
+        <p class="description">Track and analyze your blockchain transactions in real-time</p>
+    </div>
     
-    <div class="url-form">
-        <input type="text" id="url-input" placeholder="Enter URL to fetch" class="url-input">
-        <button onclick="fetchUrl()" class="fetch-button">Fetch URL</button>
+    <div class="search-container">
+        <div class="search-box">
+            <input type="text" 
+                   id="url-input" 
+                   class="search-input" 
+                   placeholder="Enter transaction hash or address..."
+                   autocomplete="off">
+            <button onclick="fetchData()" class="search-button">
+                <i class="fas fa-search"></i> Analyze
+            </button>
+        </div>
+        
+        <div class="suggestions-container">
+            <div class="quick-links">
+                <span class="quick-link" onclick="useSuggestion('https://solscan.io/tx/')">Solscan Transaction</span>
+                <span class="quick-link" onclick="useSuggestion('https://solscan.io/account/')">Solscan Account</span>
+                <span class="quick-link" onclick="useSuggestion('https://explorer.solana.com/tx/')">Solana Explorer</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="loading-indicator" id="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>Analyzing transaction data...</p>
     </div>
     
     <div id="result" class="result-container" style="display: none;">
-        <h3>Response</h3>
+        <div class="result-header">
+            <h3>Transaction Analysis</h3>
+            <div class="result-actions">
+                <button class="action-button" onclick="exportData()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="action-button" onclick="saveToHistory()">
+                    <i class="fas fa-bookmark"></i> Save
+                </button>
+            </div>
+        </div>
+        
         <div class="response-details">
-            <div class="status-code"></div>
-            <div class="headers"></div>
-            <div class="content"></div>
+            <div class="status-indicator">
+                <span class="status-label">Status:</span>
+                <span class="status-value" id="status-code"></span>
+            </div>
+            
+            <div class="data-section">
+                <h4>Transaction Details</h4>
+                <div class="content-preview" id="content"></div>
+            </div>
+            
+            <div class="metadata-section">
+                <h4>Transaction Metadata</h4>
+                <div class="headers-preview" id="headers"></div>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-.url-fetcher {
-    max-width: 800px;
+.data-explorer {
+    max-width: 1000px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 2rem;
+}
+
+.explorer-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.explorer-header h2 {
+    color: #2c3e50;
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .description {
-    color: #666;
-    margin-bottom: 20px;
+    color: #7f8c8d;
+    font-size: 1.1rem;
 }
 
-.url-form {
+.search-container {
+    background: linear-gradient(135deg, #6e8efb, #a777e3);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.search-box {
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
-.url-input {
+.search-input {
     flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.fetch-button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
+    padding: 1rem;
     border: none;
-    border-radius: 4px;
-    cursor: pointer;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.fetch-button:hover {
-    background-color: #0056b3;
+.search-button {
+    padding: 1rem 2rem;
+    background: white;
+    border: none;
+    border-radius: 8px;
+    color: #6e8efb;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.search-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.quick-links {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.quick-link {
+    background: rgba(255,255,255,0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quick-link:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+}
+
+.loading-indicator {
+    text-align: center;
+    padding: 2rem;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #6e8efb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .result-container {
-    background-color: #f8f9fa;
-    padding: 20px;
-    border-radius: 4px;
-    margin-top: 20px;
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-.response-details {
-    margin-top: 15px;
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
 }
 
-.status-code, .headers, .content {
-    margin-bottom: 15px;
-    padding: 10px;
-    background-color: white;
-    border-radius: 4px;
+.result-actions {
+    display: flex;
+    gap: 1rem;
 }
 
-.headers {
+.action-button {
+    padding: 0.5rem 1rem;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.action-button:hover {
+    background: #e9ecef;
+}
+
+.status-indicator {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.status-label {
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+.data-section, .metadata-section {
+    margin-bottom: 1.5rem;
+}
+
+.content-preview, .headers-preview {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
     font-family: monospace;
     white-space: pre-wrap;
-}
-
-.content {
     max-height: 400px;
     overflow-y: auto;
 }
 </style>
 
 <script>
-function fetchUrl() {
+function useSuggestion(endpoint) {
+    document.getElementById('url-input').value = endpoint;
+}
+
+function fetchData() {
     const url = document.getElementById('url-input').value;
     if (!url) {
-        alert('Please enter a URL');
+        alert('Please enter a transaction hash or address');
         return;
     }
     
-    fetch('/auth/api/fetch-url', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ url: url })
-    })
+    // Show loading
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('result').style.display = 'none';
+    
+    // Handle internal URLs
+    let fetchUrl, fetchOptions;
+    if (url.startsWith('http://127.0.0.1') || url.startsWith('http://localhost')) {
+        // For internal URLs, use GET method with credentials
+        fetchUrl = '/auth/api/fetch-internal?url=' + encodeURIComponent(url);
+        fetchOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'  // This will include cookies in the request
+        };
+    } else {
+        // For external URLs, use POST method
+        fetchUrl = '/auth/api/fetch-url';
+        fetchOptions = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ url: url })
+        };
+    }
+    
+    fetch(fetchUrl, fetchOptions)
     .then(response => response.json())
     .then(data => {
-        const resultDiv = document.getElementById('result');
-        resultDiv.style.display = 'block';
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('result').style.display = 'block';
         
         if (data.error) {
-            resultDiv.innerHTML = `
-                <h3>Error</h3>
-                <div class="error-message">${data.error}</div>
-                ${data.details ? `<div class="error-details">${data.details}</div>` : ''}
+            document.getElementById('content').innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    ${data.error}
+                    ${data.details ? `<div class="error-details">${data.details}</div>` : ''}
+                </div>
             `;
             return;
         }
         
-        resultDiv.innerHTML = `
-            <h3>Response</h3>
-            <div class="response-details">
-                <div class="status-code">
-                    <strong>Status Code:</strong> ${data.status_code}
-                </div>
-                <div class="headers">
-                    <strong>Headers:</strong><br>
-                    <pre>${JSON.stringify(data.headers, null, 2)}</pre>
-                </div>
-                <div class="content">
-                    <strong>Content:</strong><br>
-                    <pre>${data.content}</pre>
-                </div>
-            </div>
-        `;
+        document.getElementById('status-code').textContent = data.status_code;
+        document.getElementById('headers').innerHTML = `<pre>${JSON.stringify(data.headers, null, 2)}</pre>`;
+        document.getElementById('content').innerHTML = `<pre>${data.content}</pre>`;
     })
     .catch(error => {
-        const resultDiv = document.getElementById('result');
-        resultDiv.style.display = 'block';
-        resultDiv.innerHTML = `
-            <h3>Error</h3>
-            <div class="error-message">Failed to fetch URL</div>
-            <div class="error-details">${error.message}</div>
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('result').style.display = 'block';
+        document.getElementById('content').innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                Failed to analyze transaction
+                <div class="error-details">${error.message}</div>
+            </div>
         `;
     });
+}
+
+function exportData() {
+    // Placeholder for export functionality
+    alert('Export feature coming soon!');
+}
+
+function saveToHistory() {
+    // Placeholder for save functionality
+    alert('Save feature coming soon!');
 }
 </script>
 {% endblock %} 
