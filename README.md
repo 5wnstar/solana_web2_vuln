@@ -120,20 +120,14 @@ By studying this application, you can learn:
 ## 📚 Resources
 
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [Flask Security Best Practices](https://flask.palletsprojects.com/en/2.0.x/security/)
-- [Solana Security Guidelines](https://docs.solana.com/security)
 - [Web Security Fundamentals](https://portswigger.net/web-security)
 
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License 
 
 ## ⚠️ Security Notice
 
 This application is intentionally vulnerable and should only be used in a controlled environment for educational purposes. The maintainers are not responsible for any misuse or damage caused by this application.
 
-## 🙏 Acknowledgments
-
-- OWASP for their security guidelines
-- Flask community for the web framework
