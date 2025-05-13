@@ -127,6 +127,8 @@ By studying this application, you can learn:
 
 This project is licensed under the MIT License 
 
+See the [LICENSE](./LICENSE) file for more details.
+
 ## ⚠️ Security Notice
 
 This application is intentionally vulnerable and should only be used in a controlled environment for educational purposes. The maintainers are not responsible for any misuse or damage caused by this application.
